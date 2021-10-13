@@ -1,0 +1,35 @@
+version: "3.7"
+networks:
+  rate-limiter-dev:
+    name: rate-limiter-dev
+services:
+  redis:
+    image: bitnami/redis:latest
+    # PORT: 6379
+    environment:
+      - REDIS_PASSWORD=12313123
+    networks:
+      - rate-limiter-dev
+  rate-limiter:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "7809:7809"
+    volumes:
+      - "../../:/src"
+    depends_on:
+      - redis
+    command:
+      - /bin/sh
+      - -c
+      - |
+        air
+    environment:
+      - REDIS_URI=redis:6379
+      - PASSWORD=12313123
+      - USERNAME=test
+      - HTTP_PORT=7809
+    networks:
+      - rate-limiter-dev

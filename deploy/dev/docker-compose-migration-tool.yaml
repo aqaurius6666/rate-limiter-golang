@@ -1,0 +1,19 @@
+version: "3.7"
+networks:
+  medical-chain-server:
+    name: ${NETWORK_NAME}
+services:
+  up:
+    image: migrate/migrate
+    command: "-source file:///migrations -database cockroach://root:root@auth-cockroach:26257/defaultdb?sslmode=disable&x-force-lock=true up"
+    volumes:
+      - "../../src/implement/cockroach/migrations:/migrations"
+    networks:
+      - medical-chain-server
+  down:
+    image: migrate/migrate
+    command: "-source file:///migrations -database cockroach://root:root@auth-cockroach:26257/defaultdb?sslmode=disable&x-force-lock=true down --all"
+    volumes:
+      - "../../src/implement/cockroach/migrations:/migrations"
+    networks:
+      - medical-chain-server

@@ -1,0 +1,7 @@
+deploy
+.db
+dist
+tmp
+.dockerignore
+.gitignore
+.env

@@ -1,0 +1,36 @@
+replicaCount: 1
+revisionHistoryLimit: 1
+image:
+  repository: supermedicalchain/auth-service
+  tag: ${TAG}
+  pullPolicy: Always
+  resources:
+    requests:
+      cpu: 200m
+      memory: 100Mi
+    limits:
+      cpu: 400m
+      memory: 300Mi
+livenessProbe:
+  initialDelaySeconds: 30
+  periodSeconds: 10
+service:
+  name: auth-service
+services:
+  checkBody: ${CHECK_BODY}
+  disableTracing: ${DISABLE_TRACING}
+  disableProfiler: ${DISABLE_PROFILER}
+  version: ${VERSION}
+  grpcPort: ${GRPC_PORT}
+  httpPort: ${HTTP_PORT}
+  pprofPort: ${PPROF_PORT}
+  disableStats: ${DISABLE_STATS}
+  dbUri: ${DB_URI}
+  cleanDB: ${CLEAN_DB}
+  logLevel: ${LOG_LEVEL}
+  logFormat: ${LOG_FORMAT}
+  mailKafkaTopic: ${MAIL_KAFKA_TOPIC}
+  kafkaURI: ${KAFKA_URI}
+  otpKey: ${OTP_KEY}
+seedData:
+  enable: ${SEED_DATA}

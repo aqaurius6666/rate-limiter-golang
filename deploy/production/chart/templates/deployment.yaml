@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.service.name }}-deployment
+  labels:
+    chart: {{ .Values.service.name }}
+
+spec:
+  replicas: {{ .Values.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      app: "{{ .Values.service.name }}-selector"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.service.name }}-selector"
+    spec:
+      containers:
+        - name: {{ .Values.service.name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            requests:
+              cpu: {{ .Values.image.resources.requests.cpu }}
+              memory: {{ .Values.image.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.image.resources.limits.cpu }}
+              memory: {{ .Values.image.resources.limits.memory }}
+          readinessProbe:
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=:{{ .Values.services.grpcPort | default "50051" }}"]
+          livenessProbe:
+            exec:
+              command: ["/bin/grpc_health_probe", "-addr=:{{ .Values.services.grpcPort | default "50051" }}"]
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds}}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds}}
+          ports:
+            - containerPort: {{ .Values.services.grpcPort | default "50051" }}
+              name: "{{ .Values.service.name |initials }}-grpc"
+            - containerPort: {{ .Values.services.httpPort | default "80" }}
+              name: "{{ .Values.service.name |initials }}-http"
+            - containerPort: {{ .Values.services.pprofPort | default "3000" }}
+              name: "{{ .Values.service.name | initials }}-prof"
+          env:
+            - name: CHECK_BODY
+              value: {{ .Values.services.checkBody | default true | quote }}
+            - name: DISABLE_TRACING
+              value: {{ .Values.services.disableTracing | default false | quote }}
+            - name: DISABLE_PROFILER
+              value: {{ .Values.services.disableProfiler | default false | quote }}
+            - name: VERSION
+              value: {{ .Values.services.version | default "v1.0.0" | quote }}
+            - name: GRPC_PORT
+              value: {{ .Values.services.grpcPort | default "50051" | quote }}
+            - name: HTTP_PORT
+              value: {{ .Values.services.httpPort | default "80" | quote }}
+            - name: PPROF_PORT
+              value: {{ .Values.services.pprofPort | default "3000" | quote }}
+            - name: DISABLE_STATS
+              value: {{ .Values.services.disableStats | default false | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.services.logLevel | default "info" | quote }}
+            - name: LOG_FORMAT
+              value: {{ .Values.services.logFormat | default "json" | quote }}
+            - name: MAIL_KAFKA_TOPIC
+              value: {{ .Values.services.mailKafkaTopic | default "mail" | quote }}
+            - name: KAFKA_URI
+              value: {{ .Values.services.kafkaURI | default "kafka" | quote }}
+            - name: OTP_KEY
+              value: {{ .Values.services.otpKey | quote }}
+            - name: DB_URI
+              value: {{ .Values.services.dbUri | default "postgresql://root:root@cockroach-auth-cockroachdb:26257/defaultdb?sslmode=disable" | quote }}
+      {{- if .Values.seedData.enable }}
+      initContainers:
+        - name: "init-{{ .Values.service.name }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["seed-data"]
+          env:
+            - name: DISABLE_TRACING
+              value: {{ .Values.services.disableTracing | default false | quote }}
+            - name: DISABLE_PROFILER
+              value: {{ .Values.services.disableProfiler | default false | quote }}
+            - name: VERSION
+              value: {{ .Values.services.version | default "v1.0.0" | quote }}
+            - name: DISABLE_STATS
+              value: {{ .Values.services.disableStats | default false | quote }}
+            - name: DB_URI
+              value: {{ .Values.services.dbUri | default "postgresql://root:root@cockroach-auth-cockroachdb:26257/defaultdb?sslmode=disable" | quote }}
+            - name: CLEAN_DB
+              value: {{ .Values.services.cleanDB | default "false" | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.services.logLevel | default "info" | quote }}
+            - name: LOG_FORMAT
+              value: {{ .Values.services.logFormat | default "json" | quote }}
+            - name: MAIL_KAFKA_TOPIC
+              value: {{ .Values.services.mailKafkaTopic | default "mail" | quote }}
+            - name: KAFKA_URI
+              value: {{ .Values.services.kafkaURI | default "kafka" | quote }}
+            - name: OTP_KEY
+              value: {{ .Values.services.otpKey | quote }}
+  {{- end }}
